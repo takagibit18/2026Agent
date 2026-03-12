@@ -1,1 +1,18 @@
 /.venv-1
+
+# Python virtual environments
+.venv/
+venv/
+
+# Environment variable files
+.env
+.env.*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE files
+.vscode/
+.idea/
