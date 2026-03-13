@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot Web</title>
+</head>
+<body>
+    <h1>ChatBot Web</h1>
+    <div id="messages"></div>
+    <input type="text" id="userInput" placeholder="输入消息...">
+    <button onclick="sendMessage()">发送</button>
+
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        const userInput = document.getElementById('userInput');
+
+        async function sendMessage() {
+            const message = userInput.value;
+            if (message.trim() === '') return;
+
+            // 显示用户消息
+            messagesDiv.innerHTML += `<p><strong>你:</strong> ${message}</p>`;
+            userInput.value = '';
+
+            // 发送消息到服务器
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await response.json();
+            // 显示服务器响应
+            messagesDiv.innerHTML += `<p><strong>服务器:</strong> ${data.response}</p>`;
+        }
+    </script>
+</body>
+</html>

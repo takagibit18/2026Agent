@@ -1,9 +1,15 @@
+
 import os
 from dotenv import load_dotenv
-load_dotenv('.env.example')
-# Configuration module for LLM-related settings.
 
-# API key for the 百炼/开放AI service. 真实项目中请不要直接把密钥写在代码里，
-# 可以改为读取环境变量或者使用更安全的密钥管理方案。
-Qwen_api_key = os.getenv("API_KEY")
-Qwen_base_url= os.getenv("database_url")
+# Load environment variables from .env file in project root
+load_dotenv(dotenv_path="../.env")
+
+# Configuration constants
+API_KEY = os.getenv("API_KEY")
+BASE_URL = os.getenv("BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen-plus")
+
+# Validate critical variables
+if not API_KEY:
+    raise ValueError("API_KEY not set. Please create a .env file with your credentials.")
