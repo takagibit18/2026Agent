@@ -15,14 +15,14 @@ llm = ChatOpenAI(
     temperature=0.7,
 )
 
-# print("=" * 60)
-# print("示例 1: 基础调用（非流式）")
-# print("=" * 60)
+print("=" * 60)
+print("示例 1: 基础调用（非流式）")
+print("=" * 60)
 
 # Method 1: Direct invoke with string
-# response = llm.invoke("用三句话介绍一下自然语言处理")
-# print(f"\n响应类型: {type(response)}")
-# print(f"回答内容:\n{response.content}")
+response = llm.invoke("用三句话介绍一下自然语言处理")
+print(f"\n响应类型: {type(response)}")
+print(f"回答内容:\n{response.content}")
 
 # print("\n" + "=" * 60)
 # print("示例 2: 使用消息对象调用")
