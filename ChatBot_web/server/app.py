@@ -1,7 +1,6 @@
 import sys, os
 
-# ensure root of ChatBot_web is on Python path so imports like
-# `from chatbot.llm_connector` work when running from the server
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from flask import Flask, request, jsonify, Response, send_from_directory, stream_with_context
