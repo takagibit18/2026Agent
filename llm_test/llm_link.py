@@ -1,25 +1,64 @@
 import os
+import requests
+import json
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
-from langchain_core.messages import HumanMessage, SystemMessage
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize LangChain ChatOpenAI
-llm = ChatOpenAI(
-    model="qwen-plus",
-    api_key=os.getenv("API_KEY"),
-    base_url=os.getenv("BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+# OpenRouter API configuration
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+def call_openrouter(messages, model="openai/gpt-4o-mini", temperature=0.7):
+    """
+    Call OpenRouter API with messages.
+    """
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+    }
+    response = requests.post(OPENROUTER_BASE_URL, headers=headers, data=json.dumps(data))
+    response.raise_for_status()
+    return response.json()
+
+# Custom LLM class to mimic LangChain's interface
+class OpenRouterLLM:
+    def __init__(self, model="openai/gpt-4o-mini", temperature=0.7):
+        self.model = model
+        self.temperature = temperature
+
+    def invoke(self, input):
+        if isinstance(input, str):
+            messages = [{"role": "user", "content": input}]
+        elif isinstance(input, list):
+            messages = input
+        else:
+            raise ValueError("Input must be a string or list of messages")
+        
+        result = call_openrouter(messages, self.model, self.temperature)
+        # Create a simple response object
+        class Response:
+            def __init__(self, content):
+                self.content = content
+        return Response(result["choices"][0]["message"]["content"])
+
+# Initialize OpenRouter LLM
+llm = OpenRouterLLM(
+    model="openai/gpt-4o-mini",  # Changed from qwen-plus to a common OpenRouter model
     temperature=0.7,
 )
 
-print("=" * 60)
-print("示例 1: 基础调用（非流式）")
-print("=" * 60)
+# print("=" * 60)
+# print("示例 1: 基础调用（非流式）")
+# print("=" * 60)
 
-# Method 1: Direct invoke with string
+# # Method 1: Direct invoke with string
 response = llm.invoke("用三句话介绍一下自然语言处理")
 print(f"\n响应类型: {type(response)}")
 print(f"回答内容:\n{response.content}")
@@ -52,16 +91,16 @@ print(f"回答内容:\n{response.content}")
 # print(f"\n回答内容:\n{response.content}")
 
 # print("\n" + "=" * 60)
-print("示例 4: 流式输出")
-print("=" * 60)
+# print("示例 4: 流式输出")
+# print("=" * 60)
 
-# Method 4: Stream output
-print("\n流式回答：")
-for chunk in llm.stream("用三句话介绍一下机器学习"):
-    print(chunk.content, end="", flush=True)
-print("\n")
+# # Method 4: Stream output
+# print("\n流式回答：")
+# for chunk in llm.stream("用三句话介绍一下机器学习"):
+#     print(chunk.content, end="", flush=True)
+# print("\n")
 
-print("=" * 60)
+# print("=" * 60)
 # print("示例 5: ChatPromptTemplate 链式调用")
 # print("=" * 60)
 

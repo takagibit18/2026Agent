@@ -59,33 +59,58 @@
 #                         trible_set.add(tuple(triplet))
 
 #         return [list(t) for t in trible_set]
+# class Solution:
+#     def threeSum(self, nums: List[int]) -> List[List[int]]:
+#         n = len(nums)
+#         nums.sort()
+#         ans = list()
+        
+#         # 枚举 a
+#         for first in range(n):
+#             # 需要和上一次枚举的数不相同
+#             if first > 0 and nums[first] == nums[first - 1]:
+#                 continue
+#             # c 对应的指针初始指向数组的最右端
+#             third = n - 1
+#             target = -nums[first]
+#             # 枚举 b
+#             for second in range(first + 1, n):
+#                 # 需要和上一次枚举的数不相同
+#                 if second > first + 1 and nums[second] == nums[second - 1]:
+#                     continue
+#                 # 需要保证 b 的指针在 c 的指针的左侧
+#                 while second < third and nums[second] + nums[third] > target:
+#                     third -= 1
+#                 # 如果指针重合，随着 b 后续的增加
+#                 # 就不会有满足 a+b+c=0 并且 b<c 的 c 了，可以退出循环
+#                 if second == third:
+#                     break
+#                 if nums[second] + nums[third] == target:
+#                     ans.append([nums[first], nums[second], nums[third]])
+        
+#         return ans
+
+
+#56.合并区间
 class Solution:
-    def threeSum(self, nums: List[int]) -> List[List[int]]:
-        n = len(nums)
-        nums.sort()
-        ans = list()
-        
-        # 枚举 a
-        for first in range(n):
-            # 需要和上一次枚举的数不相同
-            if first > 0 and nums[first] == nums[first - 1]:
-                continue
-            # c 对应的指针初始指向数组的最右端
-            third = n - 1
-            target = -nums[first]
-            # 枚举 b
-            for second in range(first + 1, n):
-                # 需要和上一次枚举的数不相同
-                if second > first + 1 and nums[second] == nums[second - 1]:
-                    continue
-                # 需要保证 b 的指针在 c 的指针的左侧
-                while second < third and nums[second] + nums[third] > target:
-                    third -= 1
-                # 如果指针重合，随着 b 后续的增加
-                # 就不会有满足 a+b+c=0 并且 b<c 的 c 了，可以退出循环
-                if second == third:
-                    break
-                if nums[second] + nums[third] == target:
-                    ans.append([nums[first], nums[second], nums[third]])
-        
-        return ans
+    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
+        intervals.sort(key=lambda x: x[0])  # 按照区间的起始位置排序
+        result = []
+        i = 0  # 初始索引
+
+        while i < len(intervals):
+            left, right = intervals[i]  # 当前区间的左端点和右端点
+            j = i + 1  # 从下一个区间开始检查
+
+            # 合并与当前区间重叠的区间
+            while j < len(intervals) and intervals[j][0] <= right:
+                right = max(right, intervals[j][1])  # 合并区间，取右端点的最大值
+                j += 1  # 移动到下一个区间
+
+            # 将当前区间（合并后的区间）添加到结果中
+            result.append([left, right])
+            
+            # 跳过所有已经合并的区间
+            i = j
+
+        return result
