@@ -92,25 +92,38 @@
 
 
 #56.合并区间
-class Solution:
-    def merge(self, intervals: List[List[int]]) -> List[List[int]]:
-        intervals.sort(key=lambda x: x[0])  # 按照区间的起始位置排序
-        result = []
-        i = 0  # 初始索引
+# class Solution:
+#     def merge(self, intervals: List[List[int]]) -> List[List[int]]:
+#         intervals.sort(key=lambda x: x[0])  # 按照区间的起始位置排序
+#         result = []
+#         i = 0  # 初始索引
 
-        while i < len(intervals):
-            left, right = intervals[i]  # 当前区间的左端点和右端点
-            j = i + 1  # 从下一个区间开始检查
+#         while i < len(intervals):
+#             left, right = intervals[i]  # 当前区间的左端点和右端点
+#             j = i + 1  # 从下一个区间开始检查
 
-            # 合并与当前区间重叠的区间
-            while j < len(intervals) and intervals[j][0] <= right:
-                right = max(right, intervals[j][1])  # 合并区间，取右端点的最大值
-                j += 1  # 移动到下一个区间
+#             # 合并与当前区间重叠的区间
+#             while j < len(intervals) and intervals[j][0] <= right:
+#                 right = max(right, intervals[j][1])  # 合并区间，取右端点的最大值
+#                 j += 1  # 移动到下一个区间
 
-            # 将当前区间（合并后的区间）添加到结果中
-            result.append([left, right])
+#             # 将当前区间（合并后的区间）添加到结果中
+#             result.append([left, right])
             
-            # 跳过所有已经合并的区间
-            i = j
+#             # 跳过所有已经合并的区间
+#             i = j
 
-        return result
+#         return result
+#189.旋转数组
+# class Solution:
+#     def rotate(self, nums: List[int], k: int) -> None:
+#         nums2=[]*len(nums)
+#         for i in range(len(nums)):
+#             nums2[i]=nums[(i+k)%len(nums)]
+#         nums=nums2
+#         return nums2
+    
+class Solution:
+    def rotate(self, nums: List[int], k: int) -> None:
+        k = k % len(nums)
+        nums[:] = nums[-k:] + nums[:-k] 
