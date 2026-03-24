@@ -123,7 +123,18 @@
 #         nums=nums2
 #         return nums2
     
+# class Solution:
+#     def rotate(self, nums: List[int], k: int) -> None:
+#         k = k % len(nums)
+#         nums[:] = nums[-k:] + nums[:-k] 
+
+#HOT100 206.反转链表
 class Solution:
-    def rotate(self, nums: List[int], k: int) -> None:
-        k = k % len(nums)
-        nums[:] = nums[-k:] + nums[:-k] 
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if head is None or head.next is None:
+            return head  
+        rev_head = self.reverseList(head.next)  
+        tail = head.next  
+        tail.next = head  #
+        head.next = None  # 如果不写这行，新链表的末尾两个节点成环
+        return rev_head

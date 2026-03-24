@@ -46,4 +46,24 @@ class Solution:
                     current_len+=1
                 max_len=max(max_len,current_len)
         return max_len
-                
+
+#HOT100 160.相交链表
+ # Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+# class Solution:
+#     def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> Optional[ListNode]:
+#         nums1=dict() #哈希表存储headA的节点值
+#         while headA!=None:
+#             nums1[headA]=headA.val #这题可以不存储节点值，直接存储节点
+#             headA=headA.next
+#         while headB!=None:
+#             if headB in nums1:
+#                 return headB
+#             headB=headB.next
+#         return None      
+# 
+
+
