@@ -1,0 +1,15 @@
+# 本地 Qdrant（入门学习）：http://localhost:6333  Dashboard: http://localhost:6333/dashboard
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    container_name: qdrant-learn
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+
+volumes:
+  qdrant_storage:
