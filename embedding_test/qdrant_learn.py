@@ -17,12 +17,59 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 
 COLLECTION = "learn_demo"
+
+
+def vector_search(
+    client: QdrantClient,
+    collection_name: str,
+    query_vector: list[float],
+    *,
+    limit: int,
+    query_filter: rest.Filter | None = None,
+    with_payload: bool = True,
+):
+    """qdrant-client 1.17+ 使用 query_points；旧版仍可能有 search。"""
+    if hasattr(client, "search"):
+        return client.search(
+            collection_name=collection_name,
+            query_vector=query_vector,
+            limit=limit,
+            query_filter=query_filter,
+            with_payload=with_payload,
+        )
+    resp = client.query_points(
+        collection_name=collection_name,
+        query=query_vector,
+        limit=limit,
+        query_filter=query_filter,
+        with_payload=with_payload,
+    )
+    return resp.points
 VECTOR_SIZE = 8
-QDRANT_URL = "http://localhost:6333"
+# Docker Compose 映射 HTTP 6333、gRPC 6334。部分 Windows 环境 REST(httpx) 访问 6333 会 503，gRPC 6334 仍正常。
+QDRANT_HOST = "127.0.0.1"
+QDRANT_HTTP_PORT = 6333
+QDRANT_GRPC_PORT = 6334
 
 
-def get_client() -> QdrantClient:
-    return QdrantClient(url=QDRANT_URL)
+def connect_client() -> QdrantClient:
+    """先尝试 gRPC，再尝试 REST，避免单一通道在 Win + Docker 下异常。"""
+    base_kw = dict(
+        host=QDRANT_HOST,
+        port=QDRANT_HTTP_PORT,
+        grpc_port=QDRANT_GRPC_PORT,
+        check_compatibility=False,
+    )
+    last: Exception | None = None
+    for prefer_grpc in (True, False):
+        client = QdrantClient(prefer_grpc=prefer_grpc, **base_kw)
+        try:
+            client.get_collections()
+            return client
+        except Exception as e:
+            last = e
+    assert last is not None
+    raise last
 
 
 def ensure_collection(client: QdrantClient) -> None:
@@ -92,9 +139,10 @@ def demo_similarity_search(client: QdrantClient) -> None:
         ],
     )
     query = [0.15] * VECTOR_SIZE
-    hits = client.search(
-        collection_name=COLLECTION,
-        query_vector=query,
+    hits = vector_search(
+        client,
+        COLLECTION,
+        query,
         limit=3,
         with_payload=True,
     )
@@ -127,11 +175,12 @@ def demo_filtered_search(client: QdrantClient) -> None:
             rest.FieldCondition(key="topic", match=rest.MatchValue(value="ml")),
         ]
     )
-    hits = client.search(
-        collection_name=COLLECTION,
-        query_vector=query,
-        query_filter=flt,
+    hits = vector_search(
+        client,
+        COLLECTION,
+        query,
         limit=5,
+        query_filter=flt,
         with_payload=True,
     )
     for h in hits:
@@ -141,19 +190,21 @@ def demo_filtered_search(client: QdrantClient) -> None:
 
 
 def main() -> None:
-    client = get_client()
     try:
-        client.get_collections()
+        client = connect_client()
     except Exception as e:
-        print(f"无法连接 Qdrant ({QDRANT_URL}): {e}", file=sys.stderr)
-        print("请先在本目录执行: docker compose up -d", file=sys.stderr)
+        print(
+            f"无法连接 Qdrant ({QDRANT_HOST}，已试 gRPC:{QDRANT_GRPC_PORT} 与 REST:{QDRANT_HTTP_PORT}): {e}",
+            file=sys.stderr,
+        )
+        print("请先在本目录执行: docker compose up -d，并确认 docker ps 中映射了 6333 与 6334。", file=sys.stderr)
         sys.exit(1)
 
     ensure_collection(client)
     demo_crud(client)
     demo_similarity_search(client)
     demo_filtered_search(client)
-    print("\n完成。可在浏览器打开 http://localhost:6333/dashboard 查看集合与点。")
+    print("\n完成。可在浏览器打开 http://127.0.0.1:6333/dashboard（或 localhost）查看集合与点。")
 
 
 if __name__ == "__main__":
