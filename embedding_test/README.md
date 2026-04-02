@@ -147,10 +147,19 @@ docker compose down -v
 
 ---
 
+## 其他子项目：中文检索实验（独立文档）
+
+目录 **`zh_retrieval_lab/`** 用于 **OpenAI 嵌入 vs BGE-M3** 与 **BM25 + 向量混合** 的对比实验，**不依赖** Qdrant 或 Docker。说明、目录结构、指标定义与工程意义见专档：
+
+**[zh_retrieval_lab/README.md](zh_retrieval_lab/README.md)**
+
+---
+
 ## 文件说明
 
 | 文件 | 说明 |
 |------|------|
 | `docker-compose.yml` | 定义 Qdrant 服务、**主机端口映射**、数据卷 |
-| `requirements.txt` | Python 依赖 `qdrant-client` |
-| `qdrant_learn.py` | 入门演示脚本 |
+| `requirements.txt` | Python 依赖（Qdrant 客户端 + `zh_retrieval_lab` 所需库，见子目录 README） |
+| `qdrant_learn.py` | Qdrant 入门演示脚本 |
+| `zh_retrieval_lab/` | 中文检索实验（专档：`zh_retrieval_lab/README.md`） |

@@ -16,3 +16,6 @@ __pycache__/
 # IDE files
 .vscode/
 .idea/
+
+# 本地实验输出（可重复生成）
+embedding_test/zh_retrieval_lab/results_last_run.txt
