@@ -1,11 +1,11 @@
 """
 运行中文检索对比：纯稠密、纯 BM25、加权混合、RRF 混合。
 
-完整说明（结构、指标、工程意义）见同目录 README.md。
+完整说明（结构、指标、工程意义）见同目录 README.md；环境问题见上级 TROUBLESHOOTING.md。
 
 用法（在 embedding_test 目录）：
   pip install -r requirements.txt
-  # 可选：PowerShell: $env:OPENAI_API_KEY="sk-..."
+  # 配置：复制 zh_retrieval_lab/.env.example 为 .env 并填写 DASHSCOPE_API_KEY 等
   python -m zh_retrieval_lab.run_compare
 
 结果会打印到终端，并写入 zh_retrieval_lab/results_last_run.txt。
@@ -21,7 +21,8 @@ from pathlib import Path
 import numpy as np
 
 from zh_retrieval_lab.corpus import DOCS, QUERIES
-from zh_retrieval_lab.embed_backends import try_bge_m3, try_openai
+from zh_retrieval_lab.embed_backends import try_bge_m3, try_qwen_dashscope
+from zh_retrieval_lab.env_config import load_lab_env
 from zh_retrieval_lab.hybrid import (
     bm25_scores,
     build_bm25,
@@ -116,7 +117,7 @@ def format_table(rows: list[MethodAgg]) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="中文检索：OpenAI vs BGE-M3 + BM25 混合")
+    parser = argparse.ArgumentParser(description="中文检索：通义千问向量 vs BGE-M3 + BM25 混合")
     parser.add_argument(
         "--alpha",
         type=float,
@@ -125,15 +126,20 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    load_lab_env()
+
     tokenized_corpus = [tokenize(d.text) for d in DOCS]
     bm25 = build_bm25(tokenized_corpus)
 
     embedders: list = []
-    oa = try_openai()
-    if oa:
-        embedders.append(oa)
+    qwen = try_qwen_dashscope()
+    if qwen:
+        embedders.append(qwen)
     else:
-        print("提示：未设置 OPENAI_API_KEY 或 OpenAI 初始化失败，跳过 OpenAI 嵌入。", file=sys.stderr)
+        print(
+            "提示：未设置 DASHSCOPE_API_KEY 或 DashScope（Qwen 向量）初始化失败，跳过远程嵌入。",
+            file=sys.stderr,
+        )
 
     bge = try_bge_m3()
     if bge:
@@ -145,7 +151,7 @@ def main() -> None:
         )
 
     if not embedders:
-        print("错误：没有可用的嵌入后端。请至少配置 OpenAI 或安装 BGE-M3 依赖。", file=sys.stderr)
+        print("错误：没有可用的嵌入后端。请至少配置 DASHSCOPE_API_KEY 或安装 BGE-M3 依赖。", file=sys.stderr)
         sys.exit(2)
 
     all_rows: list[MethodAgg] = []

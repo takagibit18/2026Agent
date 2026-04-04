@@ -2,6 +2,8 @@
 
 本目录用于入门学习：用 Docker 启动 **Qdrant 服务**（镜像 **`qdrant/qdrant`**，**不需要**单独拉 Python 镜像），用本机 **Python** 运行 `qdrant_learn.py` 验证 **CRUD、相似搜索、过滤查询**。
 
+环境与连接类问题的处理说明单独放在 **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**，本文只保留推荐操作步骤。
+
 ---
 
 ## 环境与镜像说明（Windows）
@@ -44,14 +46,7 @@ docker compose up -d
 docker ps
 ```
 
-**PORTS** 应类似 **`0.0.0.0:6333->6333/tcp`**（以及 6334），**不要**只有 **`6333-6334/tcp`** 而没有 **`->`**：
-
-| PORTS 显示 | 含义 |
-|------------|------|
-| `0.0.0.0:6333->6333/tcp, ...` | 本机可访问，正确 |
-| 仅 `6333-6334/tcp` | 未发布到主机，**localhost 会拒绝连接** |
-
-若曾用 Docker Hub「直接运行」且未加 `-p`，会出现后者。请 **停止并删除** 该容器后，只用本目录的 **`docker compose up -d`** 启动。
+请确认 **PORTS** 中已将 **6333、6334** 映射到本机；若 **localhost 拒绝连接** 或 **PORTS** 显示异常，见 **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**（Docker 端口一节）。
 
 ### 5. 验证 Qdrant 已就绪
 
@@ -67,14 +62,7 @@ docker ps
 
 数据持久化在 Compose 命名卷 **`qdrant_storage`** 中；执行 `docker compose down -v` 会清空本地 Qdrant 数据，慎用。
 
-### 排错：浏览器正常，Python `qdrant-client` 报 503
-
-可能有两类原因：
-
-1. **`localhost` 走 IPv6 `::1`**（`curl.exe -v http://localhost:6333/` 可见 `Trying [::1]:6333`），与端口映射不一致时可能异常。请对脚本/客户端使用 **`127.0.0.1`**。
-2. **仅 REST(6333) 异常**：少数 **Windows + Docker Desktop** 环境下，浏览器访问 HTTP 正常，但 **Python 经 REST 仍 503**。`qdrant_learn.py` 已改为 **`connect_client()`**：**先 `prefer_grpc=True` 连 6334**，失败再退回 **REST 6333**。
-
-若两种方式仍失败，请执行 `docker compose logs qdrant --tail 50` 并确认 `docker ps` 中 **6333、6334** 均已映射到本机。
+运行脚本时出现 **503**、连接失败等异常，见 **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**。
 
 ---
 
@@ -110,7 +98,7 @@ python qdrant_learn.py
 - 无「无法连接 Qdrant」报错。
 - 脚本会 **删除并重建** 集合 `learn_demo`，再写入示例点；**可重复运行**。
 
-若报错连接失败：再执行 `docker compose ps` 确认容器为 `Up`，并用 `docker ps` 确认 **6333 已映射到本机**。若出现 **503** 且浏览器正常，见上文 **「排错：浏览器正常，Python 报 503」**（与 **`localhost` / IPv6** 有关）。
+连接或脚本异常时见 **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**。
 
 ### 下一步 3（可选）：在 Dashboard 里对照数据
 
@@ -149,7 +137,7 @@ docker compose down -v
 
 ## 其他子项目：中文检索实验（独立文档）
 
-目录 **`zh_retrieval_lab/`** 用于 **OpenAI 嵌入 vs BGE-M3** 与 **BM25 + 向量混合** 的对比实验，**不依赖** Qdrant 或 Docker。说明、目录结构、指标定义与工程意义见专档：
+目录 **`zh_retrieval_lab/`** 用于 **通义千问向量（DashScope）vs 本地 BGE-M3** 与 **BM25 + 向量混合** 的对比实验，**不依赖** Qdrant 或 Docker。说明、目录结构、指标定义与工程意义见专档：
 
 **[zh_retrieval_lab/README.md](zh_retrieval_lab/README.md)**
 
@@ -162,4 +150,5 @@ docker compose down -v
 | `docker-compose.yml` | 定义 Qdrant 服务、**主机端口映射**、数据卷 |
 | `requirements.txt` | Python 依赖（Qdrant 客户端 + `zh_retrieval_lab` 所需库，见子目录 README） |
 | `qdrant_learn.py` | Qdrant 入门演示脚本 |
-| `zh_retrieval_lab/` | 中文检索实验（专档：`zh_retrieval_lab/README.md`） |
+| `TROUBLESHOOTING.md` | 故障排除（端口、503、venv、检索实验后端等） |
+| `zh_retrieval_lab/` | 中文检索实验（专档：`zh_retrieval_lab/README.md`；模型配置见其中 `.env.example`） |
