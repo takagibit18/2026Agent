@@ -1,6 +1,6 @@
 # 中文检索实验：`zh_retrieval_lab`
 
-本目录是一个**独立的学习型小工程**：在**内存中**完成「文档编码 → 检索 → 评价」，对比 **OpenAI 嵌入** 与 **本地 BGE-M3**，并实现 **BM25（`rank_bm25`）与稠密向量的混合检索**。
+本目录是一个**独立的学习型小工程**：在**内存中**完成「文档编码 → 检索 → 评价」，对比 **通义千问文本向量（阿里云 DashScope，OpenAI 兼容接口）** 与 **本地 BGE-M3**，并实现 **BM25（`rank_bm25`）与稠密向量的混合检索**。
 
 它与同级的 **Qdrant 本地部署**（`../README.md`）**互不依赖**：不需要启动 Docker、不需要向量数据库即可跑通对比脚本。适合先理解「检索与评价」再接入 Qdrant、Elasticsearch 等工程组件。
 
@@ -11,7 +11,7 @@
 | 项目做什么 | 项目刻意不做什么 |
 |------------|------------------|
 | 用小语料演示稠密检索、词法检索与两种混合策略 | 不接 Qdrant / Milvus 等向量库（便于专注算法与指标） |
-| 对比两种典型嵌入来源：API（OpenAI）与开源本地（BGE-M3） | 不做工业级分词、索引分片、实时增量索引 |
+| 对比两种典型嵌入来源：云端 API（通义千问向量）与开源本地（BGE-M3） | 不做工业级分词、索引分片、实时增量索引 |
 | 用 MRR、Recall@k 做可复现的定量对比 | 不保证在任意业务语料上最优（语料需自行替换验证） |
 
 ---
@@ -21,20 +21,23 @@
 ```
 zh_retrieval_lab/
 ├── README.md              # 本说明（项目专档）
+├── .env.example           # 环境变量模板（复制为 .env 后填写；.env 勿提交）
 ├── __init__.py            # 包标记
+├── env_config.py          # 加载 .env 并读取模型 / API 相关配置
 ├── corpus.py              # 内置中文文档与查询 + 相关性标注
 ├── tokenize_zh.py         # 中文分词（供 BM25 使用）
 ├── metrics.py             # MRR、Recall@k 定义与计算
 ├── hybrid.py              # BM25 索引、余弦相似度、加权混合、RRF
-├── embed_backends.py      # OpenAI / BGE-M3 嵌入封装与可用性探测
+├── embed_backends.py      # Qwen（DashScope）/ BGE-M3 嵌入封装与可用性探测
 ├── run_compare.py         # 命令行入口：编码 → 多路检索 → 汇总 → 写结果文件
 └── results_last_run.txt   # 最近一次运行生成的指标表（若存在；通常已被 .gitignore 忽略）
 ```
 
 **与上级目录的关系**
 
-- `embedding_test/requirements.txt`：合并了 **Qdrant 客户端** 与本实验所需的 **numpy / jieba / rank-bm25 / openai / FlagEmbedding / torch** 等；安装一次即可同时支持 `qdrant_learn.py` 与本实验。
+- `embedding_test/requirements.txt`：合并了 **Qdrant 客户端** 与本实验所需的 **numpy / jieba / rank-bm25 / openai（作 DashScope 兼容客户端）/ FlagEmbedding / torch** 等；安装一次即可同时支持 `qdrant_learn.py` 与本实验。
 - 若你**只跑本实验**、不碰 Qdrant，仍需安装该 `requirements.txt`（或按下方「依赖」一节自行挑选包）。
+- 虚拟环境、依赖与运行时的排错说明见 **`../TROUBLESHOOTING.md`**（不在本 README 展开）。
 
 ---
 
@@ -76,9 +79,14 @@ zh_retrieval_lab/
 
 ### 3.5 `embed_backends.py`：嵌入模型
 
-- **`OpenAIEmbedder`**：调用 OpenAI API，默认模型 **`text-embedding-3-small`**，批量请求、按 `index` 排序保证与输入顺序一致。需要环境变量 **`OPENAI_API_KEY`**。
+- **`QwenDashScopeEmbedder`**：使用 **`openai.OpenAI`** 客户端，`base_url` 指向 DashScope **compatible-mode/v1**，调用通义千问文本向量模型（默认 **`text-embedding-v3`**，以 `.env` 为准）。需要 **`DASHSCOPE_API_KEY`**；地域与 **`DASHSCOPE_COMPAT_BASE_URL`** 须一致（见 `.env.example`）。
 - **`BGEM3Embedder`**：加载 **`BAAI/bge-m3`**（FlagEmbedding），返回稠密向量矩阵。首次运行会从 HuggingFace 拉取权重，需磁盘与网络；CPU 可运行。
-- **`try_openai` / `try_bge_m3`**：失败时返回 `None`，主程序跳过对应分支并打印提示，避免静默错误。
+- **`try_qwen_dashscope` / `try_bge_m3`**：失败时返回 `None`，主程序跳过对应分支并打印提示，避免静默错误。
+
+### 3.5.1 `env_config.py`：配置项摘要
+
+- **`QWEN_EMBEDDING_MODEL`**、**`DASHSCOPE_COMPAT_BASE_URL`**、可选 **`QWEN_EMBEDDING_DIMENSIONS`**、**`QWEN_EMBEDDING_BATCH_SIZE`**（单次请求文本条数，DashScope 通常 **≤10**）。  
+- **`BGE_M3_MODEL`**、**`BGE_USE_FP16`**。详见 **`.env.example`**。
 
 ### 3.6 `run_compare.py`：主流程
 
@@ -104,11 +112,17 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-可选：启用 OpenAI 分支（PowerShell）：
+### 4.1 用 `.env` 配置模型（推荐）
 
-```powershell
-$env:OPENAI_API_KEY = "sk-..."
-```
+1. 将 **`zh_retrieval_lab/.env.example`** 复制为同目录下的 **`.env`**。  
+2. 编辑 `.env`：填写 **`DASHSCOPE_API_KEY`**（使用通义千问向量时必填）、按需修改 **`QWEN_EMBEDDING_MODEL`**、**`DASHSCOPE_COMPAT_BASE_URL`**、可选 **`QWEN_EMBEDDING_DIMENSIONS`**，以及 **`BGE_M3_MODEL`**、**`BGE_USE_FP16`** 等。  
+3. 程序会先加载 **`embedding_test/.env`**，再加载 **`zh_retrieval_lab/.env`**，**同名变量以后者为准**；对这两份文件使用 `override` 加载，一般会覆盖系统里已存在的同名变量。变量说明以 **`.env.example`** 内注释为准。
+
+未使用 `.env` 时，仍可通过系统环境变量设置上述变量；未设置项使用代码默认值。
+
+**从旧版迁移**：若 `.env` 中仍保留 `OPENAI_API_KEY` / `OPENAI_EMBEDDING_MODEL` 等，请按 **`.env.example`** 改为 **`DASHSCOPE_API_KEY`**、**`QWEN_EMBEDDING_MODEL`**、**`DASHSCOPE_COMPAT_BASE_URL`**。
+
+环境或运行异常见 **[../TROUBLESHOOTING.md](../TROUBLESHOOTING.md)**。
 
 运行：
 
@@ -117,10 +131,7 @@ python -m zh_retrieval_lab.run_compare
 python -m zh_retrieval_lab.run_compare --alpha 0.5
 ```
 
-**常见情况**
-
-- 未设置 `OPENAI_API_KEY`：仅输出 BGE-M3 相关行（若 BGE 可用）。  
-- 未安装 PyTorch / FlagEmbedding 或无法下载模型：BGE 分支跳过；若 OpenAI 也未配置，程序会以错误码退出并提示至少启用一种嵌入。
+（未配置任何嵌入后端时程序会退出；DashScope 与 BGE 的可用性组合说明见 **[../TROUBLESHOOTING.md](../TROUBLESHOOTING.md)** 末段。）
 
 ---
 
@@ -140,7 +151,7 @@ python -m zh_retrieval_lab.run_compare --alpha 0.5
 - **取值范围**：\([0, 1]\)，越大越好。  
 - **与标准 IR 中「多相关文档的 recall」区别**：本语料多数查询仅标注 **1** 个相关 id，因此这里的 R@k 更接近「Top-k 是否覆盖该唯一相关文档」，便于小班教学；若你扩展为多相关文档，可在 `metrics.py` 中改为「前 k 覆盖的相关比例」等定义。
 
-### 5.3 如何对比 OpenAI 与 BGE-M3
+### 5.3 如何对比通义千问向量与 BGE-M3
 
 - 在**同一语料、同一查询集**下，比较两行 **`… | dense_only`**（分别对应两个后端）：差异主要来自**嵌入模型**对中文语义、领域词的处理。  
 - 再比较 **`bm25_only`**（与嵌入无关，所有后端共用同一行逻辑，实际上每个后端打印的 bm25 行数值应一致）：作为**纯词法基线**。  
@@ -150,7 +161,7 @@ python -m zh_retrieval_lab.run_compare --alpha 0.5
 
 ## 6. 工程与实践上的参考意义
 
-1. **嵌入选型**：用同一套标注快速对比「商业 API vs 本地开源」在中文上的排序质量，为是否上云、是否蒸馏/微调提供粗粒度依据。  
+1. **嵌入选型**：用同一套标注快速对比「云端通义千问向量 vs 本地 BGE」在中文上的排序质量，为是否走 DashScope、是否本地部署开源模型提供粗粒度依据。  
 2. **混合检索范式**：加权融合（可解释、可调 `alpha`）与 RRF（不依赖分数尺度、实现简单）是工业界常见基线；本仓库提供最小可运行实现，便于对照论文与产品文档。  
 3. **评价习惯**：先固定小语料与 MRR / R@k，再扩展语料与指标（如 nDCG），符合「可复现实验 → 再接向量库与在线 A/B」的路径。  
 4. **与 Qdrant 的衔接**：当前实现是**内存暴力检索**（文档数极少）；当规模变大时，可把「稠密部分」交给 Qdrant 的向量检索，把「BM25 部分」交给 Elasticsearch/OpenSearch 或内置稀疏通道，再用与本项目类似的 **加权或 RRF** 做结果融合——概念上一致，仅存储与召回引擎替换。
@@ -164,4 +175,4 @@ python -m zh_retrieval_lab.run_compare --alpha 0.5
 - 分词、停用词、同义词扩展未做，BM25 仍有工程优化空间。  
 - 若需与 `qdrant_learn.py` 联动：可将文档向量写入 Qdrant，仅用本项目的 **BM25 + 融合逻辑** 在应用层合并线上检索结果。
 
-更完整的 **Qdrant Docker 部署、端口与排错**，见上级文档：**[../README.md](../README.md)**。
+**Qdrant 本地部署与主流程**见 **[../README.md](../README.md)**；环境与连接类排错见 **[../TROUBLESHOOTING.md](../TROUBLESHOOTING.md)**。
