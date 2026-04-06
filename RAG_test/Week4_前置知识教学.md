@@ -3,7 +3,7 @@
 > **学习对齐**：P0 · Week 4 · 贴近 M1（RAG 知识库问答 + 评估基线）  
 > **权威对照**：`MultiAgent/学习规划.md` 第一个月 · Week 4
 
-本文档面向「刚开始第四周」的同学：先对齐**本周要做什么**，再系统串讲**Week 1–3 及 RAG 必备前置**，避免直接上手 LlamaIndex / RAGAS 时概念断层。
+本文档面向「刚开始第四周」的同学：先对齐**本周要做什么**与**第二节「本周学习项目指南」**，再系统串讲**Week 1–3 及 RAG 必备前置**，避免直接上手 LlamaIndex / RAGAS 时概念断层。
 
 ---
 
@@ -34,7 +34,44 @@
 
 ---
 
-## 二、为什么需要前置知识（一张图说清楚）
+## 二、本周学习项目指南
+
+回答三件事：**按什么顺序做、代码落在哪里、本周要交付什么**（与「1.2 本周任务」对齐）。
+
+### 2.1 建议推进顺序（由易到难）
+
+| 顺序 | 动作 | 说明 |
+| --- | --- | --- |
+| 1 | 环境与密钥 | 复用 Week 2：`OPENAI_API_KEY` / 国产模型 key；Embedding 与向量库选型建议与 `embedding_test/zh_retrieval_lab` 一致，便于横向对比。 |
+| 2 | 最小 Pipeline | 先 **PDF + Markdown 各 1 份** → Loader → 单一分块 → 向量索引 → Query Engine → 能答再问优化。 |
+| 3 | 三种分块对比 | 固定长度 / 语义 / 父子；**同一语料、同一 Embedding、同一 Top-k**，只改 Node Parser，用小评测集记差异。 |
+| 4 | 混合检索 | **BM25 + 向量**（如 RRF），衔接 Week 3；融合思路见 `embedding_test/zh_retrieval_lab/hybrid.py` 与该项目 `README.md`。 |
+| 5 | RAGAS 基线 | **20～50 条**固定问题集；至少 **Faithfulness、Answer Relevancy、Context Recall**；以规划示例 **Faithfulness ≥ 0.7** 为方向，以可复现为先。 |
+| 6 | 收尾 | README：如何建索引、如何跑评测、指标含义；便于月末 **M1** 展示。 |
+
+### 2.2 代码落点
+
+- **推荐**：仓库内 **单独子目录**（如 `RAG_test/week4_rag_lab/`，名称自定），独立依赖说明，避免与 `embedding_test` 实验环境缠在一起。  
+- **分工**：`embedding_test/zh_retrieval_lab/` 偏 **检索与混合检索**；Week 4 用 **LlamaIndex 全链路** 建议另起工程，对照第八、九节「解析—分块—索引—检索—生成」分层。  
+- **评测集**：`question` / 可选 `ground_truth` 用 JSON 或 CSV；检索到的 `contexts` 可从日志落盘供 RAGAS 使用。
+
+### 2.3 本周交付物（验收）
+
+- [ ] 可运行 **LlamaIndex RAG Pipeline**（PDF + Markdown）。  
+- [ ] **三种分块** 对比记录（改了什么 → 指标怎么变）。  
+- [ ] **BM25 + 向量** 已接入（或写明框架侧等价实现）。  
+- [ ] **RAGAS** 跑分结果至少一份（含 Faithfulness 等）。  
+- [ ] README/笔记中写明 **Embedding 模型、Top-k、chunk 参数**，保证可复现。
+
+### 2.4 时间与排障
+
+- **时间**：前段先「能跑、能评」，勿过早上 Reranker 或大重构。  
+- **排障**：先区分 **检索未召回** vs **生成不忠实**；日志带 `chunk_id`、检索分数与答案。  
+- **成本**：RAGAS 多轮调评判模型，评测集先小后大。
+
+---
+
+## 三、为什么需要前置知识（一张图说清楚）
 
 RAG 不是「调一个 API」单点技能，而是 **检索 + 生成 + 评测** 的流水线：
 
@@ -62,7 +99,7 @@ flowchart LR
 
 ---
 
-## 三、Week 1 · Python 工程化（前置要点）
+## 四、Week 1 · Python 工程化（前置要点）
 
 ### 3.1 asyncio 与并发
 
@@ -91,7 +128,7 @@ flowchart LR
 
 ---
 
-## 四、Week 2 · LLM API 与 Prompt（前置要点）
+## 五、Week 2 · LLM API 与 Prompt（前置要点）
 
 ### 4.1 Chat / Embedding / Streaming / Function Calling
 
@@ -115,7 +152,7 @@ flowchart LR
 
 ---
 
-## 五、Week 3 · 向量数据库与 Embedding（前置要点）
+## 六、Week 3 · 向量数据库与 Embedding（前置要点）
 
 ### 5.1 向量检索在干什么
 
@@ -140,7 +177,7 @@ flowchart LR
 
 ---
 
-## 六、跨周公共概念：RAG 最小必备术语
+## 七、跨周公共概念：RAG 最小必备术语
 
 | 概念 | 一句话 |
 | --- | --- |
@@ -154,7 +191,7 @@ flowchart LR
 
 ---
 
-## 七、文档解析与分块（第四周「新内容」的前置理解）
+## 八、文档解析与分块（第四周「新内容」的前置理解）
 
 ### 7.1 解析（Parsing）
 
@@ -176,7 +213,7 @@ flowchart LR
 
 ---
 
-## 八、LlamaIndex 在 Week 4 中的角色（前置心智模型）
+## 九、LlamaIndex 在 Week 4 中的角色（前置心智模型）
 
 不必死记每个类名，先记住 **职责分层**：
 
@@ -190,7 +227,7 @@ flowchart LR
 
 ---
 
-## 九、RAGAS 基线（你要提前知道的）
+## 十、RAGAS 基线（你要提前知道的）
 
 - **RAGAS 是自动化评估框架**：用（或多用）LLM 作为评判信号，批量给 Faithfulness 等指标打分。  
 - **Faithfulness ≥ 0.7** 是规划中的**目标示例**，实际数值依赖语料难度、模型档位与 Prompt；重要的是 **有一套固定评测集 + 可复现脚本**。  
@@ -200,7 +237,7 @@ flowchart LR
 
 ---
 
-## 十、开始第四周前的自检清单
+## 十一、开始第四周前的自检清单
 
 - [ ] 能解释 **Embedding 与向量检索** 的区别与配合方式。  
 - [ ] 能说明 **BM25 与向量** 各适合什么查询，为何要做 **混合检索**。  
@@ -210,7 +247,7 @@ flowchart LR
 
 ---
 
-## 十一、参考链接（规划中的延续）
+## 十二、参考链接（规划中的延续）
 
 - [LlamaIndex 官方文档](https://docs.llamaindex.ai/) — Understanding / Optimizing  
 - [RAGAS 文档](https://docs.ragas.io/) — Metrics 与 Evaluation Pipeline  
