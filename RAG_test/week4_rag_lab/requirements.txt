@@ -1,0 +1,6 @@
+# Week 4 minimal RAG (LlamaIndex). Python >= 3.10 recommended.
+llama-index>=0.11.0
+llama-index-readers-file>=0.2.0
+pymupdf>=1.24.0
+python-dotenv>=1.0
+openai>=1.40
