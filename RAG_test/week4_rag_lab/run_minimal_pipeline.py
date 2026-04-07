@@ -3,12 +3,14 @@
 
 层级 A：在终端打印本次 query 检索到的 Chunk（相似度、来源、正文片段），便于对照生成答案与语料。
 层级 B：通过 Callback 打印生成阶段实际发给 LLM 的 Chat messages；默认 QA 模板下将 USER 中的 Context / Query 拆开显示。
+三种分块对照：见 compare_chunking_strategies.py；本脚本可通过环境变量 CHUNK_STRATEGY 切换策略。
 
 学习对齐: P0 · Week 4 · 贴近 M1（LlamaIndex 全链路基线）
 """
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from llama_index.core import Settings, VectorStoreIndex
@@ -19,6 +21,7 @@ from llama_index.embeddings.openai import OpenAIEmbedding, OpenAIEmbeddingModelT
 from llama_index.llms.openai import OpenAI
 from llama_index.readers.file import PyMuPDFReader
 
+from chunking_strategies import get_strategy
 from compat_llm import OpenAICompatCustomModel, llm_needs_placeholder
 from generation_prompt_debug import GenerationPromptCallbackHandler
 from env_config import (
@@ -135,7 +138,13 @@ def main() -> None:
     documents = load_documents(data_dir)
     print(f"已加载文档块数（加载器级）: {len(documents)}")
 
-    index = VectorStoreIndex.from_documents(documents)
+    chunk_id = os.getenv("CHUNK_STRATEGY", "").strip()
+    index_kw: dict = {}
+    if chunk_id:
+        spec = get_strategy(chunk_id)
+        index_kw["transformations"] = spec.build_transformations(Settings.embed_model)
+        print(f"分块策略: {spec.id} — {spec.title}")
+    index = VectorStoreIndex.from_documents(documents, **index_kw)
     engine = index.as_query_engine(similarity_top_k=3)
 
     query = "实验前的准备步骤有哪些?几句话简要概括"

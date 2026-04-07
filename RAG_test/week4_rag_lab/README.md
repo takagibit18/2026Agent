@@ -49,7 +49,7 @@ pip install -r RAG_test\week4_rag_lab\requirements.txt
 | 步骤 | 实现 |
 | --- | --- |
 | 加载 | `SimpleDirectoryReader` 读 `data/*.md`；`PyMuPDFReader` 读 `data/sample.pdf` |
-| 分块 | LlamaIndex 默认 `SentenceSplitter`（后续实验可换三种策略） |
+| 分块 | 默认 `Settings` 的 `SentenceSplitter`；或设环境变量 `CHUNK_STRATEGY` 为 `sentence_512` / `token_256` / `semantic_90`（定义见 `chunking_strategies.py`） |
 | 索引 | `VectorStoreIndex.from_documents`（内存，未持久化） |
 | 生成 | `as_query_engine` → `query()` |
 | 检索可见（层级 A） | `Response.source_nodes`；`print_retrieved_chunks()` 打印相似度、来源与正文片段 |
@@ -61,7 +61,25 @@ pip install -r RAG_test\week4_rag_lab\requirements.txt
 python run_minimal_pipeline.py
 ```
 
-需有效 `OPENAI_API_KEY` 或 `DASHSCOPE_API_KEY`。通义路径下默认 `qwen-turbo` + `text-embedding-v3`，可在 `.env` 覆盖 `QWEN_LLM_MODEL` / `QWEN_EMBEDDING_MODEL`。
+可选：指定分块策略（与对比脚本中三种一致），例如 PowerShell 下 ` $env:CHUNK_STRATEGY="token_256"; python run_minimal_pipeline.py `。
+
+**三种分块策略对照**：在同一 Query 与 `top_k` 下依次建索引并做向量检索，**不调用 LLM**，将相似度统计与粗粒度 bigram 覆盖率写入 `output/chunking_compare_latest.json`。
+
+```bash
+python compare_chunking_strategies.py
+# 自定义查询与输出路径：
+python compare_chunking_strategies.py --query "你的问题" --out output/my_compare.json
+```
+
+**排障：改了 `chunking_strategies.py` 但 JSON 像没变**  
+1. 确认已**保存文件**，并**重新运行** `compare_chunking_strategies.py`（看终端是否打印 `chunking_strategies 加载自: ...` 路径应对应当前仓库）。  
+2. 打开 **`chunking_compare_latest.json`** 看 **`generated_at_utc`** 是否更新；若 IDE 里文件未自动刷新，请关闭标签再打开或从磁盘重新加载。  
+3. 语义策略参数微调在**小语料**上可能得到**相同的节点划分**，`indexed_node_count` / `raw_scores` 会几乎不变，属正常现象；JSON 里现在有 **`parser_runtime`** 与 **`semantic_env`**，可确认实际使用的 `buffer_size` / `breakpoint_percentile_threshold`。  
+4. 不改代码只调参：可设环境变量 `SEMANTIC_BUFFER_SIZE`、`SEMANTIC_BREAKPOINT_PCT` 后再运行对比脚本。
+
+指标说明（见 JSON 内 `metrics_note`）：**mean_score / min / max** 来自向量检索分数；**query_bigram_coverage** 表示查询中汉字 **bigram** 在 top-k 拼接正文里出现的比例，仅作粗对照，**不能**替代 RAGAS 等标注评估。
+
+需有效 `OPENAI_API_KEY` 或 `DASHSCOPE_API_KEY`。通义路径下默认 `qwen-turbo` + `text-embedding-v3`，可在 `.env` 覆盖 `QWEN_LLM_MODEL` / `QWEN_EMBEDDING_MODEL`。**语义分块**（`semantic_90`）建索引时会额外调用嵌入 API，耗时与费用高于另外两种。
 
 终端除 **Answer** 外会输出 **检索到的内容（层级 A）**：每条含 `score`、`source` / `page`（若有）与截断后的 Chunk 正文，便于对照「检索 → 生成」是否一致。
 
@@ -77,7 +95,11 @@ week4_rag_lab/
 ├── requirements.txt
 ├── .env.example
 ├── env_config.py           # 加载 .env（先 embedding_test，再本目录）
-├── run_minimal_pipeline.py # 入口
+├── run_minimal_pipeline.py      # 最小问答入口
+├── chunking_strategies.py       # 三种分块策略定义
+├── compare_chunking_strategies.py # 建索引 + 检索指标对比 + 写 JSON
+├── generation_prompt_debug.py   # 层级 B：打印发给 LLM 的 messages
+├── output/                      # 默认写入 chunking_compare_latest.json（可 gitignore）
 ├── data/
 │   ├── sample.md
 │   ├── 磁阻效应实验讲义(第3版)-邹斌.pdf  # 源讲义（自备）；build_sample_pdf 从中抽取前 5 页
@@ -107,6 +129,9 @@ week4_rag_lab/
 
 **问：层级 A 为什么要打印检索到的 Chunk？**  
 答：调试 RAG 时先确认 **Retriever 是否召回了正确段落**，再判断 **LLM 是复述还是幻觉**；`query()` 返回的 `Response.source_nodes` 与最终 Answer 分开观察，问题定位更快。
+
+**问：三种分块对比脚本在比什么？**  
+答：在 **同一套 Embedding 与 top_k** 下，换 **NodeParser / Splitter**，看 **索引节点数、检索分数分布、召回正文长度、查询 bigram 覆盖率** 等差异；语义分块会改变「一块里装多少句」，向量命中位置随之变化。要评「答案对不对」仍需人工或 RAGAS。
 
 ---
 

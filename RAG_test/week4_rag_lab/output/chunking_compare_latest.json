@@ -1,0 +1,113 @@
+{
+  "generated_at_utc": "2026-04-07T15:52:15.380389+00:00",
+  "chunking_strategies_py": "E:\\PycharmProjects\\2026Agent\\RAG_test\\week4_rag_lab\\chunking_strategies.py",
+  "semantic_env": {
+    "SEMANTIC_BUFFER_SIZE": 1,
+    "SEMANTIC_BREAKPOINT_PCT": 50
+  },
+  "query": "实验前的准备步骤有哪些?几句话简要概括",
+  "top_k": 3,
+  "embedding": {
+    "embedding_model": "text-embedding-v4",
+    "embedding_dimensions": null,
+    "api_base_host": "dashscope.aliyuncs.com"
+  },
+  "strategies": [
+    {
+      "strategy_id": "sentence_512",
+      "strategy_title": "SentenceSplitter 512/50",
+      "strategy_note": "句子边界 + 字符窗口；与常见默认接近。",
+      "parser_runtime": {
+        "class_name": "SentenceSplitter",
+        "chunk_size": 512,
+        "chunk_overlap": 50,
+        "separator": " "
+      },
+      "indexed_node_count": 13,
+      "top_k": 3,
+      "raw_scores": [
+        0.6333482985661794,
+        0.5090120374180743,
+        0.49926026309310034
+      ],
+      "retrieval_metrics": {
+        "num_valid_scores": 3,
+        "mean_score": 0.547206866359118,
+        "min_score": 0.49926026309310034,
+        "max_score": 0.6333482985661794,
+        "total_retrieved_chars": 1202,
+        "query_bigram_coverage": 0.23529411764705882,
+        "query_bigram_count": 17
+      },
+      "retrieved_previews": [
+        "5%。 \n \n五、实验内容与步骤 \n（一）实验前准备 \n1、电流调零：仪器开机前，需将励磁电流IM 和工作电流Is 调节电位器逆时针方向轻\n轻地旋到底，以保证通电后励磁电流和工作电流初始值均为零。 \n2、认真检查：检查信号源上“IM 励磁信号输出”与测试架上的“IM 励磁信号输入”接\n线柱的中间两端是否连接。红导线与红接线柱相连，黑导线与黑接线柱相连。 \n3、连接信号输入导线：将信号源的“信号输入”两端用导线接至“输出信号切换K2”\n接线柱的中间两端。 \n4、连接工作电流信号…",
+        "实验讲义循环使用，请勿涂写，请勿带走。   实验地点：丰台校区崇理楼210 实验室 \n2 \n \n \n图1 霍尔效应 \n设有横向均匀磁场B 作用在一束以速度为v 的电子流上，运动电荷受到的洛伦兹力为： \n      \n(\n)\nBf\ne v\nB\n= −\n\n                                （1） \n其方向沿y 轴的负方向，造成电子流发生偏转，被推向半导体的上侧（N 面）。在N 面上形\n成负电荷积累，而相对下侧（M 面）形成正电荷积累，使M，N 面之…",
+        "一、实验目的 \n1．掌握产生霍尔效应、磁阻效应的物理机理及用霍尔效应测量磁场的原理和方法； \n2. 测定锑化铟（InSb）磁阻元件电阻与磁感应强度的对应关系； \n3. 研究锑化铟（InSb）磁阻元件在不同磁感应强度区域的磁感应强度与电阻值相对改变量\n的关系，进行曲线拟合，得到磁阻元件电阻与磁感应强度关系的经验公式； \n4．利用霍尔效应测量电磁铁间隙中的磁场分布； \n5. 观测在弱正弦交流磁场中，磁阻传感器的交流倍频特性。 \n \n三、实验原理 \n \n（一）、霍尔效应 \n霍尔效应…"
+      ]
+    },
+    {
+      "strategy_id": "token_256",
+      "strategy_title": "TokenTextSplitter 256/32",
+      "strategy_note": "按 token 切分；块更小、检索命中更局部。",
+      "parser_runtime": {
+        "class_name": "TokenTextSplitter",
+        "chunk_size": 256,
+        "chunk_overlap": 32,
+        "separator": " "
+      },
+      "indexed_node_count": 29,
+      "top_k": 3,
+      "raw_scores": [
+        0.6834950069660705,
+        0.5919695096282532,
+        0.5686300882158787
+      ],
+      "retrieval_metrics": {
+        "num_valid_scores": 3,
+        "mean_score": 0.6146982016034008,
+        "min_score": 0.5686300882158787,
+        "max_score": 0.6834950069660705,
+        "total_retrieved_chars": 313,
+        "query_bigram_coverage": 0.23529411764705882,
+        "query_bigram_count": 17
+      },
+      "retrieved_previews": [
+        "五、实验内容与步骤 \n（一）实验前准备 \n1、电流调零：仪器开机前，需将励磁电流IM 和工作电流Is 调节电位器逆时针方向轻\n轻地旋到底，以保证通电后励磁电流和工作电流初始值均为零。 \n2、认真检查：检查信号源上“IM 励磁信号输出”与测试架上的“IM 励磁信号输入”接\n线柱的中间两端是否连接。红导线与红接线柱相连，黑导线与黑接线柱相连。",
+        "6、接通的电源。注意：一定要先连线，后接通电源。本实验中的励磁电流的连线始终\n保持为连接状态，严禁在励磁线圈加电后插拔励磁电流连线！因为此时会有极强的感应电压，\n可能会损坏仪器。",
+        "实验讲义循环使用，请勿涂写，请勿带走。   实验地点：丰台校区崇理楼210 实验室 \n5 \n \nDH4510"
+      ]
+    },
+    {
+      "strategy_id": "semantic_90",
+      "strategy_title": "SemanticSplitter（语义断点）",
+      "strategy_note": "嵌入相似度断点；参数见 JSON 中 parser_runtime；可用 SEMANTIC_BUFFER_SIZE / SEMANTIC_BREAKPOINT_PCT 覆盖。",
+      "parser_runtime": {
+        "class_name": "SemanticSplitterNodeParser",
+        "buffer_size": 1,
+        "breakpoint_percentile_threshold": 50
+      },
+      "indexed_node_count": 7,
+      "top_k": 3,
+      "raw_scores": [
+        0.4895118621706393,
+        0.4834897401968209,
+        0.47294789007335075
+      ],
+      "retrieval_metrics": {
+        "num_valid_scores": 3,
+        "mean_score": 0.481983164146937,
+        "min_score": 0.47294789007335075,
+        "max_score": 0.4895118621706393,
+        "total_retrieved_chars": 1669,
+        "query_bigram_coverage": 0.23529411764705882,
+        "query_bigram_count": 17
+      },
+      "retrieved_previews": [
+        "实验讲义循环使用，请勿涂写，请勿带走。   实验地点：丰台校区崇理楼210 实验室 \n5 \n \nDH4510 磁阻效应综合实验仪由信号源和测试架两部分组成。实验仪包括双路可调直流\n恒流源、电流表、数字式磁场强度计（毫特计）和磁阻电压转换测量表（毫伏表）、控制电\n源等。测试架包括励磁线圈（含电磁铁）、锑化铟（InSb）磁阻传感器、砷化镓（GaAs）霍\n尔传感器、转换继电器及导线等组成。 \n主要技术指标： \n1、励磁电流IM（直流电流源）：电流0～750mA 连续可调。 \n2、工…",
+        "实验讲义循环使用，请勿涂写，请勿带走。   实验地点：丰台校区崇理楼210 实验室 \n4 \n \n \n图2 测量磁电阻实验装置 \n尽管不同的磁阻装置有不同的灵敏度，但其电阻的相对改变量ΔR/R(0)与外磁场的关系\n都是相似的。实验证明，磁阻效应对外加磁场的极性不灵敏，就是正负磁场的效应相同。一\n般情况下外加磁场较弱时，电阻相对改变量ΔR/R(0)与磁感应强度B 成二次函数关系；随磁\n场的加强，ΔR/R(0)与磁感应强度B 成一次函数关系；当外加磁场超过特定值时，ΔR/R(0)\n…",
+        "实验讲义循环使用，请勿涂写，请勿带走。   实验地点：丰台校区崇理楼210 实验室 \n1 \n \n磁阻效应实验 \n \n一、概述 \n磁阻效应是指某些金属或半导体的电阻值随外加磁场变化而发生改变的现象。和霍尔效\n应一样，磁阻效应也是由于载流子在磁场中受到的洛仑兹力而产生的。磁阻器件由于其灵敏\n度高、抗干扰能力强等优点在工业、交通、仪器仪表、医疗器械、探矿等领域应用十分广泛，\n如：数字式罗盘、交通车辆检测，导航系统、伪钞检测、位置测量等探测器。其中最典型的\n锑化铟（InSb）传感器是…"
+      ]
+    }
+  ],
+  "metrics_note": "mean_score 等为向量相似度统计；越高通常表示与查询向量越近，但不等于答案正确。query_bigram_coverage 为查询汉字 bigram 在 top-k 拼接正文中的命中率，仅作粗对照。"
+}
