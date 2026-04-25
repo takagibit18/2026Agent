@@ -18,5 +18,8 @@ __pycache__/
 .vscode/
 .idea/
 
+# Private resume artifacts
+private_resume/
+
 # 本地实验输出（可重复生成）
 embedding_test/zh_retrieval_lab/results_last_run.txt
