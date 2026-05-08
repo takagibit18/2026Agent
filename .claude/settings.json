@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"E:\\\\PycharmProjects\\\\Debug\\\\eval\\\\outputs\" -Directory)",
+      "Bash(Sort-Object LastWriteTime -Descending)",
+      "Bash(Select-Object -First 10 Name, LastWriteTime)",
+      "Read(//e/PycharmProjects/Debug/eval/outputs/**)",
+      "PowerShell(Get-ChildItem -Path \"E:\\\\PycharmProjects\\\\Debug\\\\eval\\\\outputs\" -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 5 | ForEach-Object { $_.Name + \" | \" + $_.LastWriteTime.ToString\\(\"yyyy-MM-dd HH:mm:ss\"\\) })"
+    ]
+  }
+}

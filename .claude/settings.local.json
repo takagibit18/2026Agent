@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"E:\\\\PycharmProjects\\\\2026Agent\\\\MultiAgent\\\\agent\\\\知识库\" -Name)"
+    ]
+  }
+}
